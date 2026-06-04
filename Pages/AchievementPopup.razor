@@ -1,0 +1,52 @@
+﻿@using Trainingsfortschritt.Web.Services
+
+@inject AchievementPopupService PopupService
+
+@if (PopupService.CurrentBatch.Count > 0)
+{
+    <div class="achievement-overlay">
+
+        <div class="achievement-popup">
+
+            <h3>🏆 Achievements freigeschaltet!</h3>
+
+            @foreach (var a in PopupService.CurrentBatch)
+            {
+                <div class="achievement-item">
+                    <div>
+                        <strong>@a.Title</strong>
+                    </div>
+
+                    <div>
+                        @a.Description
+                    </div>
+
+                    <div>
+                        [@a.Rarity]
+                    </div>
+
+                    <hr />
+                </div>
+            }
+
+        </div>
+
+    </div>
+}
+
+@code {
+    protected override void OnInitialized()
+    {
+        PopupService.Changed += Refresh;
+    }
+
+    private void Refresh()
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        PopupService.Changed -= Refresh;
+    }
+}

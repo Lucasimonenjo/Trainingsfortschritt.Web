@@ -1,0 +1,237 @@
+﻿@page "/add-set/{ExerciseId:int}"
+
+@using Trainingsfortschritt.Web.ViewModels
+
+@inject AddSetViewModel Vm
+@inject NavigationManager Nav
+@inject IJSRuntime JS
+
+<div style="
+    display:flex;
+    align-items:center;
+    gap:12px;
+    margin-bottom:20px;">
+
+    <button class="btn btn-secondary"
+            @onclick="GoHome">
+        🏠
+    </button>
+
+    <button class="btn btn-secondary"
+            @onclick="GoBack">
+        ←
+    </button>
+
+    <h3 style="margin:0;">
+        ➕ Neues Set
+    </h3>
+
+</div>
+
+@if (!Vm.IsLoaded)
+{
+    <p>Lade...</p>
+}
+else
+{
+    <div style="
+        display:flex;
+        flex-direction:column;
+        gap:12px;
+        max-width:400px;">
+
+        <!-- GEWICHT -->
+        <div>
+            <label>Gewicht (kg)</label>
+
+            <input type="number"
+                   @bind="Vm.Weight"
+                   class="form-control" />
+        </div>
+
+        <!-- WIEDERHOLUNGEN -->
+        <div>
+            <label>Wiederholungen (z. B. 3x8)</label>
+
+            <input type="text"
+                   @bind="Vm.RepsInput"
+                   class="form-control" />
+        </div>
+
+        <!-- SITZEINSTELLUNG -->
+        <div>
+            <label>Sitzeinstellung</label>
+
+            <input type="text"
+                   @bind="Vm.SeatSetting"
+                   class="form-control" />
+        </div>
+
+        <!-- NOTIZEN -->
+        <div>
+            <label>Notizen</label>
+
+            <textarea @bind="Vm.Notes"
+                          class="form-control">
+            </textarea>
+            </div>
+
+            <!-- TAGS -->
+            @if (Vm.ShowTags)
+            {
+                <div>
+
+                    <label>Tags</label>
+
+                    <div style="
+                        display:flex;
+                        flex-wrap:wrap;
+                        gap:8px;
+                        margin-top:8px;">
+
+                        @foreach (var tag in Vm.Tags)
+                        {
+                            <button type="button"
+                                    class="tag-btn"
+                                    style="@GetTagStyle(tag)"
+                                    @onclick="() => Vm.ToggleTag(tag)">
+
+                                @tag.Name
+
+                            </button>
+                        }
+
+                    </div>
+
+                </div>
+            }
+
+            <!-- BUTTONS -->
+            <div style="
+                display:flex;
+                gap:10px;
+                margin-top:20px;">
+
+                <button class="btn btn-primary"
+                        @onclick="SaveAsync"
+                        disabled="@Vm.IsBusy">
+
+                    Speichern
+
+                </button>
+
+                <button class="btn btn-secondary"
+                        @onclick="Cancel">
+
+                    Abbrechen
+
+                </button>
+
+            </div>
+
+        </div>
+    }
+
+@code {
+
+    [Parameter]
+    public int ExerciseId { get; set; }
+
+    private string? _error;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        Vm.ExerciseId = ExerciseId;
+
+        await Vm.RefreshAsync();
+    }
+
+    private async Task SaveAsync()
+    {
+        _error = null;
+
+        // VALIDIERUNG
+        if (Vm.Weight <= 0)
+        {
+            _error = "Bitte gib ein Gewicht ein.";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(Vm.RepsInput))
+        {
+            _error = "Bitte gib Wiederholungen ein.";
+            return;
+        }
+
+        try
+        {
+            // SAVE
+            await Vm.SaveAsync();
+
+            // =========================
+            // GOAL MESSAGE
+            // =========================
+            var goalMessage = await Vm.GetGoalMessageAsync();
+
+            if (!string.IsNullOrWhiteSpace(goalMessage))
+            {
+                await JS.InvokeVoidAsync(
+                    "sessionStorage.setItem",
+                    "goalMessage",
+                    goalMessage
+                );
+            }
+
+            // =========================
+            // PR POPUP
+            // =========================
+            if (Vm.IsPR)
+            {
+                await JS.InvokeVoidAsync(
+                    "sessionStorage.setItem",
+                    "prPopup",
+                    $"{Vm.PRWeight}|{Vm.PRReps}"
+                );
+            }
+
+            // NAVIGATION
+            Nav.NavigateTo($"/exercise/{ExerciseId}");
+        }
+        catch (Exception ex)
+        {
+            _error = $"Fehler beim Speichern: {ex.Message}";
+        }
+    }
+
+    private void Cancel()
+    {
+        Nav.NavigateTo($"/exercise/{ExerciseId}");
+    }
+
+    private string GetTagStyle(AddSetViewModel.TagItem tag)
+    {
+        return tag.IsSelected
+            ? @"
+                background:#FFD700;
+                border:none;
+                padding:8px 12px;
+                border-radius:16px;
+                cursor:pointer;"
+            : @"
+                background:#e0e0e0;
+                border:none;
+                padding:8px 12px;
+                border-radius:16px;
+                cursor:pointer;";
+    }
+
+    private void GoHome()
+    {
+        Nav.NavigateTo("/");
+    }
+
+    private void GoBack()
+    {
+        Nav.NavigateTo("javascript:history.back()");
+    }
+}

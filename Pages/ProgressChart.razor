@@ -1,0 +1,102 @@
+﻿@page "/progress-chart"
+
+@using Trainingsfortschritt.Web.ViewModels
+@inject ProgressChartViewModel Vm
+@inject NavigationManager Nav
+
+<div style="display:flex; gap:10px; align-items:center; margin-bottom:20px;">
+    <button class="btn btn-secondary" @onclick="GoBack">←</button>
+    <h3 style="margin:0;">📊 Fortschritt</h3>
+</div>
+
+@if (!Vm.IsLoaded)
+{
+    <p>Lade Diagramm...</p>
+}
+else
+{
+    <!-- Übung -->
+    <div class="card p-3 mb-3">
+
+        <label>Übung</label>
+
+        <select class="form-control"
+                @bind="Vm.SelectedExerciseId"
+                @bind:after="Vm.RefreshChart">
+
+            <option value="">-- Bitte wählen --</option>
+
+            @foreach (var ex in Vm.Exercises)
+            {
+                <option value="@ex.Id">@ex.Name</option>
+            }
+
+        </select>
+
+    </div>
+
+    <!-- Optionen -->
+    <div class="card p-3 mb-3">
+
+        <label>Metrik</label>
+
+        <select class="form-control"
+                @bind="Vm.SelectedMetric"
+                @bind:after="Vm.RefreshChart">
+
+            @foreach (var m in Vm.Metrics)
+            {
+                <option value="@m">@m</option>
+            }
+
+        </select>
+
+        <label class="mt-2">Zeitraum</label>
+
+        <select class="form-control"
+                @bind="Vm.SelectedRange"
+                @bind:after="Vm.RefreshChart">
+
+            @foreach (var r in Vm.Ranges)
+            {
+                <option value="@r">@r</option>
+            }
+
+        </select>
+
+    </div>
+
+    <!-- CHART -->
+    <div class="card p-3">
+
+        <h5>Verlauf</h5>
+
+        @if (Vm.ChartPoints == null || Vm.ChartPoints.Count == 0)
+        {
+            <p>Keine Daten vorhanden</p>
+        }
+        else
+        {
+            @foreach (var p in Vm.ChartPoints)
+            {
+                <div style="display:flex; justify-content:space-between;"
+                     @key="p.Date.Ticks">
+                    <span>@p.Date.ToString("dd.MM.yyyy HH:mm")</span>
+                    <span>@p.Value</span>
+                </div>
+            }
+        }
+
+    </div>
+}
+
+@code {
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Vm.LoadAsync();
+    }
+
+    private void GoBack()
+        => Nav.NavigateTo("/settings");
+}

@@ -1,0 +1,199 @@
+﻿@page "/achievements"
+@using Trainingsfortschritt.Web.ViewModels
+@inject AchievementsViewModel Vm
+
+<h3 style="color:@GetTextColor()">🏆 Achievements</h3>
+
+<!-- ========================= -->
+<!-- SYSTEM STATUS -->
+<!-- ========================= -->
+<div style="
+    padding:10px;
+    margin-bottom:12px;
+    border-radius:10px;
+    background:@GetCardBackground();
+    color:@GetTextColor();
+    border:1px solid @GetBorderColor();
+    ">
+    <strong>System:</strong>
+    <span style="color:@Vm.SystemStatusColor">
+        @Vm.SystemStatusText
+    </span>
+</div>
+
+<!-- ========================= -->
+<!-- RESET BUTTON -->
+<!-- ========================= -->
+<button class="btn btn-warning"
+        @onclick="Vm.ResetAsync">
+    Achievements zurücksetzen
+</button>
+
+<hr />
+
+<!-- ========================= -->
+<!-- FILTER BUTTONS -->
+<!-- ========================= -->
+<div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px;">
+
+    <button class="btn btn-secondary" @onclick='() => Vm.SetFilter("ALL")'>Alle</button>
+    <button class="btn btn-secondary" @onclick='() => Vm.SetFilter("COMMON")'>Common</button>
+    <button class="btn btn-secondary" @onclick='() => Vm.SetFilter("RARE")'>Rare</button>
+    <button class="btn btn-secondary" @onclick='() => Vm.SetFilter("EPIC")'>Epic</button>
+    <button class="btn btn-secondary" @onclick='() => Vm.SetFilter("IMPOSSIBLE")'>Impossible</button>
+
+    @if (Vm.ShowSpecialAchievements)
+    {
+        <button class="btn btn-info" @onclick='() => Vm.SetFilter("SPECIAL")'>
+            Special
+        </button>
+    }
+
+</div>
+
+<hr />
+
+<!-- ========================= -->
+<!-- EMPTY STATE -->
+<!-- ========================= -->
+@if (Vm.FilteredAchievements == null || Vm.FilteredAchievements.Count == 0)
+{
+    <div style="padding:15px; color:orange;">
+        ⚠ Keine Achievements im Filter geladen
+    </div>
+}
+else
+{
+    <div style="display:flex; flex-direction:column; gap:10px;">
+
+        @foreach (var item in Vm.FilteredAchievements)
+        {
+            var percent = item.Progress * 100;
+
+            <div style="
+                border:2px solid @Vm.GetColor(item);
+                border-radius:12px;
+                padding:12px;
+                background:@GetCardBackground();
+                color:@GetTextColor();
+                transition:all 0.2s ease;
+                ">
+
+                <!-- TITLE -->
+                <div style="
+                    font-size:18px;
+                    font-weight:bold;
+                    color:@GetTitleColor(item);
+                    ">
+                    @item.Title
+                </div>
+
+                <!-- DESCRIPTION -->
+                <div style="
+                    font-size:13px;
+                    margin-top:2px;
+                    color:@GetMutedTextColor();
+                    ">
+                    @item.Description
+                </div>
+
+                <!-- PROGRESS -->
+                <div style="margin-top:10px;">
+
+                    <div style="
+                        height:10px;
+                        background:@GetProgressBg();
+                        border-radius:6px;
+                        overflow:hidden;
+                        ">
+                        <div style="
+                        width:@($"{percent}%");
+                        height:100%;
+                        background:@Vm.GetColor(item);
+                        "></div>
+                    </div>
+
+                    <small style="color:@GetMutedTextColor();">
+                        @item.ProgressText
+                    </small>
+
+                </div>
+
+                <!-- RARITY -->
+                <div style="
+                    margin-top:6px;
+                    font-size:12px;
+                    color:@GetMutedTextColor();
+                    ">
+                    Rarity: @item.Rarity
+                </div>
+
+                <!-- UNLOCKED -->
+                @if (item.IsUnlocked)
+                {
+                    <div style="color:limegreen; font-weight:bold; margin-top:6px;">
+                        ✔ Freigeschaltet
+                    </div>
+                }
+
+            </div>
+        }
+
+    </div>
+}
+
+<!-- ========================= -->
+<!-- HELPERS -->
+<!-- ========================= -->
+@code {
+    private bool IsDarkMode => false; // später aus SettingsService ersetzen
+
+    private string GetCardBackground()
+        => IsDarkMode ? "#1e1e1e" : "#f7f7f7";
+
+    private string GetBorderColor()
+        => IsDarkMode ? "#333" : "#ddd";
+
+    private string GetTextColor()
+        => IsDarkMode ? "#f2f2f2" : "#1a1a1a";
+
+    private string GetMutedTextColor()
+        => IsDarkMode ? "#b5b5b5" : "#666";
+
+    private string GetProgressBg()
+        => IsDarkMode ? "#2a2a2a" : "#e0e0e0";
+
+    private string GetTitleColor(Trainingsfortschritt.Core.Models.AchievementItem item)
+    {
+        // COMMON = immer stark kontrastiert
+        if (item.Rarity == "COMMON")
+            return IsDarkMode ? "#ffffff" : "#111111";
+
+        // RARE / EPIC / IMPOSSIBLE / SPECIAL
+        var baseColor = Vm.GetColor(item);
+
+        // 🔥 Safety Override: verhindert weiß-auf-weiß / hell-auf-hell
+        if (IsLightColor(baseColor, IsDarkMode))
+            return IsDarkMode ? "#ffffff" : "#111111";
+
+        return baseColor;
+    }
+    private bool IsLightColor(string color, bool darkMode)
+    {
+        if (string.IsNullOrWhiteSpace(color))
+            return true;
+
+        color = color.ToLower();
+
+        // typische helle Farben abfangen
+        return color switch
+        {
+            "#fff" => true,
+            "#ffffff" => true,
+            "white" => true,
+            "#f5f5f5" => true,
+            "#eaeaea" => true,
+            _ => false
+        };
+    }
+}

@@ -1,0 +1,204 @@
+﻿@page "/exercise/{Id:int}"
+
+@using Trainingsfortschritt.Core.Models
+@using Trainingsfortschritt.Web.ViewModels
+
+@inject IDatabaseService DatabaseService
+@inject NavigationManager Nav
+@inject IJSRuntime JS
+
+<div style="
+    display:flex;
+    align-items:center;
+    gap:12px;
+    margin-bottom:20px;">
+
+    <button class="btn btn-secondary" @onclick="GoHome">🏠</button>
+    <button class="btn btn-secondary" @onclick="GoBack">←</button>
+
+    <h3 style="margin:0;">
+        @_vm.ExerciseName
+    </h3>
+</div>
+
+@if (!_vm.IsLoaded)
+{
+    <p>Lade Übung...</p>
+}
+else
+{
+    <p>@_vm.TargetInfo</p>
+
+    <div style="margin-bottom:20px; display:flex; gap:10px; flex-wrap:wrap;">
+        <button @onclick="AddSet">➕ Set hinzufügen</button>
+        <button @onclick="SetTarget">🎯 Ziel einstellen</button>
+
+        <button @onclick="RemoveTarget"
+                style="background:#ffcccc;color:darkred;">
+            ❌ Ziel entfernen
+        </button>
+    </div>
+
+    @if (!_vm.Sets.Any())
+    {
+        <p>Noch keine Sets vorhanden.</p>
+    }
+    else
+    {
+        @foreach (var set in _vm.Sets)
+        {
+            <div style="border:1px solid #ccc; border-radius:8px; padding:12px; margin-bottom:12px;">
+
+                <p><b>Datum:</b> @set.Date.ToString("dd.MM.yyyy")</p>
+                <p><b>Gewicht:</b> @set.Weight kg</p>
+                <p><b>Wiederholungen:</b> @set.RepsDisplay</p>
+
+                @if (!string.IsNullOrWhiteSpace(set.SeatSetting))
+                {
+                    <p><b>Sitzeinstellung:</b> @set.SeatSetting</p>
+                }
+
+                @if (!string.IsNullOrWhiteSpace(set.Notes))
+                {
+                    <p><b>Notizen:</b> @set.Notes</p>
+                }
+
+                @if (!string.IsNullOrWhiteSpace(set.Tags))
+                {
+                    <p><b>Tags:</b> @set.Tags</p>
+                }
+
+                <div style="margin-top:10px; display:flex; gap:10px;">
+                    <button @onclick="() => EditSet(set.Id)">✏ Bearbeiten</button>
+
+                    <button @onclick="() => DeleteSet(set)"
+                            style="background:#ff4d4d;color:white;">
+                        🗑 Löschen
+                    </button>
+                </div>
+            </div>
+        }
+    }
+}
+
+@code {
+
+    [Parameter]
+    public int Id { get; set; }
+
+    private ExerciseDetailViewModel _vm = default!;
+
+    // 🔥 verhindert doppelte Popups
+    private bool _goalPopupShown;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _vm ??= new ExerciseDetailViewModel(
+            DatabaseService,
+            async msg => await JS.InvokeAsync<bool>("confirm", msg)
+        );
+
+        await _vm.LoadAsync(Id);
+    }
+
+    
+    private bool _prPopupShown;
+    // 🔥 Popup exakt EINMAL anzeigen
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        // =========================
+        // GOAL POPUP
+        // =========================
+
+        if (!_goalPopupShown)
+        {
+            var goalDetectionEnabled =
+                await JS.InvokeAsync<string?>(
+                    "localStorage.getItem",
+                    "goalDetectionEnabled"
+                );
+
+            if (goalDetectionEnabled != "false")
+            {
+                var msg = await JS.InvokeAsync<string?>(
+                    "sessionStorage.getItem",
+                    "goalMessage"
+                );
+
+                if (!string.IsNullOrWhiteSpace(msg))
+                {
+                    _goalPopupShown = true;
+
+                    await JS.InvokeVoidAsync(
+                        "sessionStorage.removeItem",
+                        "goalMessage"
+                    );
+
+                    await JS.InvokeVoidAsync(
+                        "alert",
+                        $"🎯 Ziel erreicht!\n\n{msg}"
+                    );
+                }
+            }
+        }
+
+        // =========================
+        // PR POPUP
+        // =========================
+
+        if (!_prPopupShown)
+        {
+            var pr = await JS.InvokeAsync<string?>(
+                "sessionStorage.getItem",
+                "prPopup"
+            );
+
+            if (!string.IsNullOrWhiteSpace(pr))
+            {
+                _prPopupShown = true;
+
+                await JS.InvokeVoidAsync(
+                    "sessionStorage.removeItem",
+                    "prPopup"
+                );
+
+                var parts = pr.Split('|');
+
+                var weight = parts.Length > 0 ? parts[0] : "";
+                var reps = parts.Length > 1 ? parts[1] : "";
+
+                await JS.InvokeVoidAsync(
+                    "alert",
+                    $"🏆 PR\n\nGewicht: {weight} kg\nWiederholungen: {reps}"
+                );
+            }
+        }
+    }
+
+    private void AddSet()
+        => Nav.NavigateTo($"/add-set/{Id}");
+
+    private void SetTarget()
+        => Nav.NavigateTo($"/set-target/{Id}");
+
+    private async Task RemoveTarget()
+    {
+        await _vm.RemoveTargetAsync();
+        await _vm.LoadAsync(Id);
+    }
+
+    private async Task DeleteSet(ExerciseSet set)
+    {
+        await _vm.DeleteSetAsync(set);
+        await _vm.LoadAsync(Id);
+    }
+
+    private void EditSet(int setId)
+        => Nav.NavigateTo($"/edit-set/{setId}");
+
+    private void GoHome()
+        => Nav.NavigateTo("/");
+
+    private void GoBack()
+        => Nav.NavigateTo("/");
+}

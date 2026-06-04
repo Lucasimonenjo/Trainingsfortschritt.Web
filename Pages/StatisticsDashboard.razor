@@ -1,0 +1,62 @@
+﻿@page "/statistics-dashboard"
+
+@using Trainingsfortschritt.Web.ViewModels
+@inject StatisticsDashboardViewModel Vm
+@inject NavigationManager Nav
+
+<div style="display:flex; gap:10px; align-items:center; margin-bottom:20px;">
+    <button class="btn btn-secondary" @onclick="GoBack">←</button>
+    <h3 style="margin:0;">📊 Statistik Dashboard</h3>
+</div>
+
+@if (!Vm.IsLoaded)
+{
+    <p>Lade Statistik...</p>
+}
+else
+{
+    <!-- TRAINING HÄUFIGKEIT -->
+    <div class="card p-3 mb-3">
+        <div>Trainings diese Woche</div>
+        <div style="font-size:22px; font-weight:bold;">
+            @Vm.WorkoutsThisWeek
+        </div>
+    </div>
+
+    <div class="card p-3 mb-3">
+        <div>Trainings diesen Monat</div>
+        <div style="font-size:22px; font-weight:bold;">
+            @Vm.WorkoutsThisMonth
+        </div>
+    </div>
+
+    <!-- ÜBUNG HÄUFIGKEIT -->
+    <h5>Übungs-Häufigkeit</h5>
+
+    @if (Vm.MuscleDistribution.Count == 0)
+    {
+        <p>Keine Daten vorhanden</p>
+    }
+    else
+    {
+        @foreach (var item in Vm.MuscleDistribution)
+        {
+            <div class="card p-2 mb-2"
+                 style="display:flex; justify-content:space-between;">
+                <span>@item.Key</span>
+                <span>@item.Value</span>
+            </div>
+        }
+    }
+}
+
+@code {
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Vm.LoadAsync();
+    }
+
+    private void GoBack()
+        => Nav.NavigateTo("/settings");
+}

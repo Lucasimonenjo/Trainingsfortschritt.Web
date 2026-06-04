@@ -1,0 +1,123 @@
+﻿@page "/add-exercise"
+
+@using Trainingsfortschritt.Web.ViewModels
+@inject IDatabaseService DatabaseService
+@inject NavigationManager Nav
+@inject IJSRuntime JS
+
+<div style="
+    display:flex;
+    align-items:center;
+    gap:12px;
+    margin-bottom:20px;">
+
+    <button class="btn btn-secondary"
+            @onclick="GoHome">
+        🏠
+    </button>
+
+    <button class="btn btn-secondary"
+            @onclick="GoBack">
+        ←
+    </button>
+
+    <h3 style="margin:0;">
+        ➕ Neue Übung
+    </h3>
+
+</div>
+
+<div style="display:flex;">
+    <div style="width:280px;">
+        <InputText class="form-control form-control-sm"
+                   @bind-Value="_name"
+                   placeholder="Übung eingeben..." />
+    </div>
+</div>
+
+@if (!string.IsNullOrWhiteSpace(_status))
+{
+    <p style="margin-top:15px; color:cyan;">
+        @_status
+    </p>
+}
+
+<div style="margin-top:20px; display:flex; gap:10px;">
+
+    <button @onclick="SaveAsync" disabled="@_isSaving">
+        @(_isSaving ? "Speichert..." : "Speichern")
+    </button>
+
+    <button @onclick="CancelAsync" disabled="@_isSaving">
+        Abbrechen
+    </button>
+
+</div>
+
+@code {
+
+    private bool _isSaving;
+    private string _status = "";
+    private string _name = "";
+
+    private async Task SaveAsync()
+    {
+        if (_isSaving)
+            return;
+
+        _isSaving = true;
+        _status = "Speichere...";
+
+        try
+        {
+            // =========================
+            // VIEWMODEL (FIX: JS MITGEBEN)
+            // =========================
+            var vm = new AddExerciseViewModel(
+                DatabaseService,
+                async message =>
+                    await JS.InvokeAsync<bool>("confirm", message),
+                JS
+            );
+
+            vm.Name = _name;
+
+            var ok = await vm.SaveAsync();
+
+            if (!ok)
+            {
+                _status = "Abgebrochen";
+                return;
+            }
+
+            _status = "Gespeichert";
+
+            await Task.Delay(150);
+
+            Nav.NavigateTo("/", forceLoad: true);
+        }
+        catch (Exception ex)
+        {
+            _status = $"Fehler: {ex.Message}";
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private void CancelAsync()
+    {
+        Nav.NavigateTo("/", forceLoad: true);
+    }
+
+    private void GoHome()
+    {
+        Nav.NavigateTo("/");
+    }
+
+    private void GoBack()
+    {
+        Nav.NavigateTo("javascript:history.back()");
+    }
+}

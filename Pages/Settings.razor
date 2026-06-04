@@ -1,0 +1,485 @@
+﻿@page "/settings"
+
+@using Trainingsfortschritt.Web.ViewModels
+
+@inject SettingsViewModel Vm
+@inject NavigationManager Nav
+
+<div style="display:flex; gap:10px; margin-bottom:20px; align-items:center;">
+
+    <button class="btn btn-secondary" @onclick="GoHome">🏠</button>
+
+    <button class="btn btn-secondary" @onclick="GoBack">←</button>
+
+    <h2>Einstellungen</h2>
+
+</div>
+
+<div style="display:flex; flex-direction:column; gap:20px; max-width:900px;">
+
+    <!-- DARSTELLUNG -->
+    <section class="card p-3">
+
+        <h3>🎨 Darstellung</h3>
+
+        <div class="mb-3">
+            <label>App Theme</label>
+
+            <select class="form-control"
+                    @bind="Vm.AppTheme"
+                    @bind:after="ThemeChanged">
+                <option>System</option>
+                <option>Dark</option>
+                <option>Light</option>
+            </select>
+        </div>
+
+        <div>
+            <input type="checkbox" @bind="Vm.CompactCards" />
+            Kompakte Kartenansicht
+        </div>
+
+        <div>
+            <input type="checkbox" @bind="Vm.GroupExercises" />
+            Gruppierte Übungen
+        </div>
+
+        <div>
+            <input type="checkbox" @bind="Vm.ShowProgressBars" />
+            Fortschrittsbalken anzeigen
+        </div>
+
+    </section>
+
+    <!-- TRAINING -->
+    <section class="card p-3">
+
+        <h3>🏋️ Training</h3>
+
+        <div>
+            <input type="checkbox"
+                   checked="@Vm.GoalDetectionEnabled"
+                   @onchange="OnGoalDetectionChanged" />
+
+            Zielerkennung aktivieren
+        </div>
+
+        <div>
+            <input type="checkbox"
+                   checked="@Vm.VariantPopupEnabled"
+                   @onchange="OnVariantPopupChanged" />
+
+            Varianten-Popup anzeigen
+        </div>
+
+        <div>
+            <input type="checkbox"
+                   checked="@Vm.TagsEnabled"
+                   @onchange="OnTagsChanged" />
+
+            Tags aktivieren
+        </div>
+
+        <div>
+            <input type="checkbox"
+                   checked="@Vm.PRDetectionEnabled"
+                   @onchange="OnPRDetectionChanged" />
+
+            PR-Erkennung aktivieren
+        </div>
+
+        <div>
+            <input type="checkbox"
+                   @bind="Vm.SaveSeatSettings"
+                   @bind:after="SavePrefs" />
+            Sitzeinstellungen speichern
+        </div>
+
+        <div>
+            <input type="checkbox"
+                   @bind="Vm.SaveLastWeight"
+                   @bind:after="SavePrefs" />
+            Letztes Gewicht übernehmen
+        </div>
+
+        <div>
+            <input type="checkbox"
+                   @bind="Vm.SaveLastReps"
+                   @bind:after="SavePrefs" />
+            Letzte Wiederholungen übernehmen
+        </div>
+
+    </section>
+
+    <!-- ACHIEVEMENTS -->
+    <section class="card p-3">
+
+        <h3>🏆 Achievements</h3>
+
+        <div>
+            <input type="checkbox" @bind="Vm.AchievementSystemEnabled" />
+            Achievement-System aktivieren
+        </div>
+
+        <div>
+            <input type="checkbox" @bind="Vm.AchievementPopupsEnabled" />
+            Achievement-Popups anzeigen
+        </div>
+
+        <div>
+            <input type="checkbox" @bind="Vm.ShowSpecialAchievements" />
+            Versteckte Achievements anzeigen
+        </div>
+
+    </section>
+
+    <!-- STATISTIK -->
+    <section class="card p-3">
+
+        <h3>📊 Statistik</h3>
+
+        <button class="btn btn-primary mb-2"
+                @onclick="OpenChart">
+            Fortschrittsdiagramm
+        </button>
+
+        <button class="btn btn-primary mb-2"
+                @onclick="@(() => Nav.NavigateTo("/personal-records"))">
+            Persönliche Rekorde
+        </button>
+
+        <button class="btn btn-primary"
+        @onclick="@(() => Nav.NavigateTo("/statistics-dashboard"))">
+    Statistik Dashboard
+</button>
+
+    </section>
+
+    <!-- DATEN -->
+    <section class="card p-3">
+
+        <h3>🗂 Daten</h3>
+
+        <button class="btn btn-warning mb-2"
+                @onclick="ClearGoalHistory">
+            Goal History löschen
+        </button>
+
+        <button class="btn btn-warning mb-2"
+                @onclick="ResetAchievements">
+            Achievements zurücksetzen
+        </button>
+
+        <button class="btn btn-primary mb-2"
+                @onclick="Export">
+            Daten exportieren
+        </button>
+
+        @if (Vm.HasExportFile)
+        {
+            <div class="alert alert-secondary">
+
+                <b>Backup erstellt</b>
+
+                <div>@Vm.ExportFilePath</div>
+
+                <button class="btn btn-success mt-2"
+                        @onclick="DownloadExport">
+                    ⬇ Download
+                </button>
+
+                <button class="btn btn-info mt-2"
+                        @onclick="ShareExport">
+                    📤 Teilen
+                </button>
+
+            </div>
+        }
+
+        <button class="btn btn-primary mb-2"
+                @onclick="PickImport">
+            Daten importieren
+        </button>
+
+        @if (!string.IsNullOrWhiteSpace(Vm.ImportFilePath))
+        {
+            <div class="alert alert-secondary mt-2">
+                <b>Datei:</b> @Vm.ImportFilePath
+            </div>
+
+            <button class="btn btn-success mt-2"
+                    @onclick="DoImport">
+                Import starten
+            </button>
+        }
+
+        <button class="btn btn-danger"
+                @onclick="ResetDb">
+            Datenbank zurücksetzen
+        </button>
+
+    </section>
+
+    <!-- BENACHRICHTIGUNGEN -->
+    <section class="card p-3">
+
+        <h3>🔔 Benachrichtigungen</h3>
+
+        <div style="
+            background:#f5f5f5;
+            border:1px solid #ddd;
+            border-radius:6px;
+            padding:10px;
+            font-size:12px;
+            margin:8px 0 12px 0;
+            opacity:0.85;
+            ">
+            ℹ️ Zurzeit keine Verwendung, späterer Einbau per Backend in Überlegung
+        </div>
+
+        <div>
+            <input type="checkbox" @bind="Vm.TrainingRemindersEnabled" />
+            Trainingserinnerung
+        </div>
+
+        <div>
+            <input type="checkbox" @bind="Vm.PRNotificationsEnabled" />
+            PR Benachrichtigungen
+        </div>
+
+        <div>
+            <input type="checkbox" @bind="Vm.GoalNotificationsEnabled" />
+            Ziel erreicht
+        </div>
+
+        <div>
+            <input type="checkbox" @bind="Vm.InactivityNotificationsEnabled" />
+            Inaktivitätswarnung
+        </div>
+
+        <button class="btn btn-secondary mt-2"
+                @onclick="TestNotification">
+            Test Notification
+        </button>
+
+    </section>
+</div>
+
+@code {
+
+    private void GoHome()
+    {
+        Nav.NavigateTo("/");
+    }
+
+    private void GoBack()
+    {
+        Nav.NavigateTo("/");
+    }
+
+    private void OpenChart()
+    {
+        Nav.NavigateTo("/progress-chart");
+    }
+
+    private void OpenPRs()
+    {
+        Vm.OpenPersonalRecords();
+    }
+
+    private void OpenDashboard()
+    {
+        Vm.OpenStatisticsDashboard();
+    }
+
+    private async Task ClearGoalHistory()
+    {
+        await Vm.ClearGoalHistoryAsync();
+    }
+
+    private async Task ResetAchievements()
+    {
+        await Vm.ResetAchievementsAsync();
+    }
+
+    private async Task Export()
+    {
+        await Vm.ExportDataAsync();
+    }
+
+    private async Task Import()
+    {
+        await Vm.ImportDataAsync();
+    }
+
+    private async Task ResetDb()
+    {
+        await Vm.ResetDatabaseAsync();
+    }
+
+    private void OpenExportFile()
+    {
+        Vm.OpenExportFile();
+    }
+
+    private void ShareExportFile()
+    {
+        Vm.ShareExportFile();
+    }
+
+    private void ShowDatabasePath()
+    {
+        Vm.ShowDatabasePath();
+    }
+
+    private async Task TestNotification()
+    {
+        await Vm.TestNotificationAsync();
+    }
+    private Task ThemeChanged()
+    {
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+
+    private async Task OnGoalDetectionChanged(ChangeEventArgs e)
+    {
+        bool enabled = (bool)e.Value!;
+
+        Vm.GoalDetectionEnabled = enabled;
+
+        await JS.InvokeVoidAsync(
+            "localStorage.setItem",
+            "goalDetectionEnabled",
+            enabled.ToString().ToLower()
+        );
+    }
+    @inject IJSRuntime JS
+
+    private async Task OnVariantPopupChanged(ChangeEventArgs e)
+    {
+        bool enabled = (bool)e.Value!;
+
+        Vm.VariantPopupEnabled = enabled;
+
+        await JS.InvokeVoidAsync(
+            "localStorage.setItem",
+            "variantPopupEnabled",
+            enabled.ToString().ToLower()
+        );
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        // Varianten Popup
+        var variantPopup = await JS.InvokeAsync<string?>(
+            "localStorage.getItem",
+            "variantPopupEnabled"
+        );
+
+        if (!string.IsNullOrWhiteSpace(variantPopup))
+        {
+            Vm.VariantPopupEnabled = variantPopup == "true";
+        }
+
+        // Goal Detection
+        var goalDetection = await JS.InvokeAsync<string?>(
+            "localStorage.getItem",
+            "goalDetectionEnabled"
+        );
+
+        if (!string.IsNullOrWhiteSpace(goalDetection))
+        {
+            Vm.GoalDetectionEnabled = goalDetection == "true";
+        }
+
+        // Tags
+        var tagsEnabled = await JS.InvokeAsync<string?>(
+            "localStorage.getItem",
+            "tagsEnabled"
+        );
+
+        if (!string.IsNullOrWhiteSpace(tagsEnabled))
+        {
+            Vm.TagsEnabled = tagsEnabled == "true";
+        }
+        var prSaved = await JS.InvokeAsync<string?>(
+    "localStorage.getItem",
+    "prDetectionEnabled"
+);
+
+        if (!string.IsNullOrWhiteSpace(prSaved))
+        {
+            Vm.PRDetectionEnabled = prSaved == "true";
+        }
+        var seat = await JS.InvokeAsync<string?>("localStorage.getItem", "saveSeatSettings");
+        var weight = await JS.InvokeAsync<string?>("localStorage.getItem", "saveLastWeight");
+        var reps = await JS.InvokeAsync<string?>("localStorage.getItem", "saveLastReps");
+
+        Vm.SaveSeatSettings = seat == "true";
+        Vm.SaveLastWeight = weight == "true";
+        Vm.SaveLastReps = reps == "true";
+    }
+    private async Task OnTagsChanged(ChangeEventArgs e)
+    {
+        bool enabled = (bool)e.Value!;
+
+        Vm.TagsEnabled = enabled;
+
+        await JS.InvokeVoidAsync(
+            "localStorage.setItem",
+            "tagsEnabled",
+            enabled.ToString().ToLower()
+        );
+    }
+    private async Task OnPRDetectionChanged(ChangeEventArgs e)
+    {
+        bool enabled = (bool)e.Value!;
+
+        Vm.PRDetectionEnabled = enabled;
+
+        await JS.InvokeVoidAsync(
+            "localStorage.setItem",
+            "prDetectionEnabled",
+            enabled.ToString().ToLower()
+        );
+    }
+    @inject IJSRuntime JS
+
+    private async Task SavePrefs()
+    {
+        await JS.InvokeVoidAsync("localStorage.setItem", "saveSeatSettings", Vm.SaveSeatSettings.ToString().ToLower());
+        await JS.InvokeVoidAsync("localStorage.setItem", "saveLastWeight", Vm.SaveLastWeight.ToString().ToLower());
+        await JS.InvokeVoidAsync("localStorage.setItem", "saveLastReps", Vm.SaveLastReps.ToString().ToLower());
+    }
+    private async Task Share()
+    {
+        await JS.InvokeVoidAsync("shareExport", Vm.LastExportFile);
+    }
+    private async Task DownloadExport()
+    {
+        await JS.InvokeVoidAsync(
+            "downloadFile",
+            Vm.ExportFilePath,
+            Vm.ExportContent
+        );
+    }
+
+    private async Task ShareExport()
+    {
+        await JS.InvokeVoidAsync(
+            "shareExport",
+            Vm.ExportFilePath,
+            Vm.ExportContent
+        );
+    }
+    private async Task PickImport()
+    {
+        await Vm.PickImportFileAsync();
+    }
+
+    private async Task DoImport()
+    {
+        await Vm.ImportDataAsync();
+    }
+
+}

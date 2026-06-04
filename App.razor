@@ -1,0 +1,54 @@
+﻿@inject Trainingsfortschritt.Core.Services.AchievementService Achievements
+
+<Router AppAssembly="@typeof(App).Assembly">
+
+    <Found Context="routeData">
+
+        <!-- 🔥 WICHTIG: Initialisierung einmal beim ersten Routing sicherstellen -->
+        @if (!_initialized)
+        {
+            <div style="padding:20px;">
+                <p>Lade System...</p>
+            </div>
+        }
+        else
+        {
+            <RouteView RouteData="@routeData"
+                       DefaultLayout="@typeof(MainLayout)" />
+
+            <FocusOnNavigate RouteData="@routeData"
+                             Selector="h1" />
+        }
+
+    </Found>
+
+    <NotFound>
+
+        <LayoutView Layout="@typeof(MainLayout)">
+
+            <div style="padding:20px;">
+
+                <h3>Seite nicht gefunden</h3>
+
+                <a href="/">Zurück zur Startseite</a>
+
+            </div>
+
+        </LayoutView>
+
+    </NotFound>
+
+</Router>
+
+@code {
+    private bool _initialized = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // 🔥 garantiert: Achievements werden geladen BEVOR UI genutzt wird
+        await Achievements.EnsureInitializedAsync();
+
+        _initialized = true;
+        StateHasChanged();
+    }
+}

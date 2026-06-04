@@ -1,0 +1,90 @@
+﻿@page "/personal-records"
+
+@using Trainingsfortschritt.Web.ViewModels
+@inject PersonalRecordsViewModel Vm
+@inject NavigationManager Nav
+
+<div style="display:flex; gap:10px; align-items:center; margin-bottom:20px;">
+    <button class="btn btn-secondary" @onclick="GoBack">←</button>
+    <h3 style="margin:0;">🏆 Persönliche Rekorde</h3>
+</div>
+
+@if (!Vm.IsLoaded)
+{
+    <p>Lade Rekorde...</p>
+}
+else
+{
+    <!-- Übung Auswahl -->
+    <div class="card p-3 mb-3">
+
+        <label>Übung</label>
+
+        <select class="form-control"
+                value="@Vm.SelectedExerciseId"
+                @onchange="OnExerciseChanged">
+
+            <option value="">-- Bitte wählen --</option>
+
+            @foreach (var ex in Vm.Exercises)
+            {
+                <option value="@ex.Id">@ex.Name</option>
+            }
+
+        </select>
+
+    </div>
+
+    <!-- RECORDS -->
+    <div class="card p-3">
+
+        <h5>Rekorde</h5>
+
+        @if (Vm.Records.Count == 0)
+        {
+            <p>Keine Daten vorhanden</p>
+        }
+        else
+        {
+            @foreach (var r in Vm.Records)
+            {
+                <div class="card p-2 mb-2" style="border-radius:12px;">
+
+                    <div style="font-weight:bold; font-size:18px;">
+                        @r.Title
+                    </div>
+
+                    <div style="font-size:22px;">
+                        @r.Value
+                    </div>
+
+                    <div style="opacity:0.7;">
+                        @r.Date.ToString("dd.MM.yyyy")
+                    </div>
+
+                </div>
+            }
+        }
+
+    </div>
+}
+
+@code {
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Vm.LoadAsync();
+    }
+
+    private void GoBack()
+        => Nav.NavigateTo("/settings");
+
+    private async Task OnExerciseChanged(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var id))
+        {
+            await Vm.SetExerciseAsync(id);
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+}

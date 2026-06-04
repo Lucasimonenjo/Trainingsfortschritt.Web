@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Trainingsfortschritt.Web</title>
+
+    <base href="/" />
+
+    <link rel="stylesheet" href="lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="css/app.css" />
+    <link rel="icon" type="image/png" href="favicon.png" />
+    <link href="Trainingsfortschritt.Web.styles.css" rel="stylesheet" />
+</head>
+
+<body>
+    <div id="app">
+        <div class="loading-progress">
+            <div class="loading-progress-text">Lade Daten...</div>
+        </div>
+    </div>
+
+    <div id="blazor-error-ui">
+        An unhandled error has occurred.
+        <a href=".">Reload</a>
+        <span class="dismiss">🗙</span>
+    </div>
+
+    <script src="_framework/blazor.webassembly.js"></script>
+
+    <!-- =========================
+         STORAGE API
+    ========================== -->
+    <script>
+        // =========================
+        // STORAGE API (SAFE)
+        // =========================
+        window.idbStorage = {
+            get: function (key) {
+                try {
+                    return localStorage.getItem(key);
+                } catch (e) {
+                    console.error("idbStorage.get failed", e);
+                    return null;
+                }
+            },
+            set: function (key, value) {
+                try {
+                    localStorage.setItem(key, value);
+                } catch (e) {
+                    console.error("idbStorage.set failed", e);
+                }
+            },
+            remove: function (key) {
+                try {
+                    localStorage.removeItem(key);
+                } catch (e) {
+                    console.error("idbStorage.remove failed", e);
+                }
+            },
+            clear: function () {
+                try {
+                    localStorage.clear();
+                } catch (e) {
+                    console.error("idbStorage.clear failed", e);
+                }
+            }
+        };
+        window.idbStorageSync = {
+            get: function (key) {
+                try {
+                    return localStorage.getItem(key);
+                } catch (e) {
+                    return null;
+                }
+            },
+            set: function (key, value) {
+                try {
+                    localStorage.setItem(key, value);
+                } catch (e) { }
+            },
+            remove: function (key) {
+                try {
+                    localStorage.removeItem(key);
+                } catch (e) { }
+            }
+        };
+
+        // =========================
+        // DOWNLOAD FILE
+        // =========================
+        window.downloadFile = function (filename, content) {
+            try {
+                const blob = new Blob([content], { type: "application/json" });
+                const url = URL.createObjectURL(blob);
+
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = filename || "export.json";
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+
+                setTimeout(() => URL.revokeObjectURL(url), 1000);
+            } catch (e) {
+                console.error("downloadFile failed", e);
+            }
+        };
+
+        // =========================
+        // SHARE FILE
+        // =========================
+        window.shareExport = async function (filename, content) {
+            try {
+                if (!navigator.share) {
+                    alert("Sharing wird nicht unterstützt.");
+                    return;
+                }
+
+                const file = new File(
+                    [content],
+                    filename || "export.json",
+                    { type: "application/json" }
+                );
+
+                if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                    await navigator.share({
+                        files: [file],
+                        title: "Trainings Export",
+                        text: "Meine Trainingsdaten"
+                    });
+                } else {
+                    // fallback ohne file
+                    await navigator.share({
+                        title: "Trainings Export",
+                        text: "Meine Trainingsdaten"
+                    });
+                }
+            } catch (e) {
+                console.log("Share abgebrochen oder blockiert", e);
+            }
+        };
+
+        // =========================
+        // FILE PICKER (IMPORT)
+        // =========================
+        window.pickFile = function () {
+            return new Promise((resolve) => {
+                try {
+                    const input = document.createElement("input");
+                    input.type = "file";
+                    input.accept = ".json";
+
+                    input.onchange = e => {
+                        const file = e.target.files?.[0];
+
+                        if (!file) {
+                            resolve(null);
+                            return;
+                        }
+
+                        const reader = new FileReader();
+
+                        reader.onload = evt => {
+                            resolve({
+                                name: file.name,
+                                content: evt.target.result
+                            });
+                        };
+
+                        reader.onerror = () => resolve(null);
+
+                        reader.readAsText(file);
+                    };
+
+                    input.click();
+                } catch (e) {
+                    console.error("pickFile failed", e);
+                    resolve(null);
+                }
+            });
+        };
+            window.appNotifications = {
+                alert: function (title, message) {
+                alert(title + "\n\n" + message);
+            }
+        };
+    
+
+        // =========================
+        // DEBUG
+        // =========================
+        console.log("JS bridge loaded");
+    </script>
+
+</body>
+
+</html>

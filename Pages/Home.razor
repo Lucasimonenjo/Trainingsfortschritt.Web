@@ -1,0 +1,229 @@
+﻿@page "/"
+
+@using Trainingsfortschritt.Web.ViewModels
+@inject HomeViewModel Vm
+@inject NavigationManager Nav
+@inject IJSRuntime JS
+@inject SettingsViewModel Settings
+@implements IDisposable
+
+<h3>🏠 Trainingsfortschritt</h3>
+
+<p style="color:limegreen;">
+    Home aktiv (Blazor Version)
+</p>
+
+<div style="margin-bottom:20px;">
+
+    <button @onclick="AddExercise">➕ Übung hinzufügen</button>
+
+    <button @onclick="Reset"
+            style="background:red;color:white;">
+        🗑 Datenbank löschen
+    </button>
+
+    <button
+            @onclick="OpenGoalHistory">
+        🏆 Goal History
+    </button>
+
+</div>
+
+@if (!Vm.IsLoaded)
+{
+    <p>Lade Daten...</p>
+}
+else if (!Vm.GroupedExercises.Any())
+{
+    <p>Keine Übungen vorhanden.</p>
+}
+else
+{
+    @foreach (var group in Vm.GroupedExercises)
+    {
+        <div style="margin-bottom:20px;">
+
+            <!-- GROUP HEADER -->
+            <h4 style="cursor:pointer;"
+                @onclick="() => Toggle(group)">
+                @(group.IsExpanded ? "▼" : "▶") @group.Name
+            </h4>
+
+            @if (group.IsExpanded)
+            {
+                @foreach (var item in group.OrderBy(x => x.Name))
+                {
+                    var progress = item.ProgressPercent;
+if (progress > 100) progress = 100;
+if (progress < 0) progress = 0;
+
+                    <div style="
+                        border:1px solid #ccc;
+                        padding:10px;
+                        margin:8px;
+                        border-radius:8px;">
+
+                        <!-- NAME -->
+                        <h5 style="cursor:pointer; margin:0 0 6px 0;"
+                            @onclick="() => Open(item.ExerciseId)">
+                            @item.Name
+                        </h5>
+
+                        <!-- ========================= -->
+                        <!-- PROGRESS BAR -->
+                        <!-- ========================= -->
+                        @if (!Settings.CompactCards && Settings.ShowProgressBars)
+                        {
+                            var progressValue = Math.Clamp(item.ProgressPercent, 0, 100);
+                            var width = progressValue.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture) + "%";
+
+                            <div style="margin-bottom:6px;">
+
+                                <!-- BACKGROUND -->
+                                <div style="
+                                    width:100%;
+                                    height:10px;
+                                    background:#e0e0e0;
+                                    border-radius:6px;
+                                    overflow:hidden;">
+
+                                    <!-- FILL -->
+                                    <div style="
+                                        width:@width;
+                                        height:100%;
+                                        background:@GetColor(progressValue);
+                                        transition:width 0.3s ease;">
+                                    </div>
+
+                                </div>
+
+                                <!-- TEXT -->
+                                <div style="font-size:12px; margin-top:3px;">
+                                    @progressValue.ToString("0")% erreicht
+                                </div>
+
+                                <div style="font-size:11px; opacity:0.6;">
+                                    Ziel:
+                                    @if (item.TargetWeight > 0)
+                                    {
+                                        @($"{item.TargetWeight}kg")
+                                    }
+
+                                    @if (item.TargetSets > 0 && item.TargetReps > 0)
+                                    {
+                                        @($" - {item.TargetSets}x{item.TargetReps}")
+                                    }
+                                </div>
+
+                            </div>
+                        }
+
+                        <!-- ========================= -->
+                        <!-- CONTENT -->
+                        <!-- ========================= -->
+                        @if (Settings.CompactCards)
+                        {
+                            <p style="margin:2px 0;">
+                                🎯 Ziele erreicht: @item.GoalsReachedCount
+                            </p>
+                        }
+                        else
+                        {
+                            <div style="line-height:1.2;">
+
+                                <p style="margin:2px 0;">
+                                    @item.LatestInfo
+                                </p>
+
+                                <p style="margin:2px 0;">
+                                    @item.DateInfo
+                                </p>
+
+                                <p style="margin:2px 0;">
+                                    🎯 Ziele erreicht: @item.GoalsReachedCount
+                                </p>
+
+                            </div>
+                        }
+
+                        <!-- DELETE -->
+                        <button @onclick="() => Delete(item.ExerciseId)">
+                            🗑 Löschen
+                        </button>
+
+                    </div>
+                }
+            }
+
+        </div>
+    }
+}
+
+@code {
+
+    private bool _subscribed;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Load();
+
+        if (!_subscribed)
+        {
+            SettingsViewModel.SettingsChanged += StateHasChanged;
+            _subscribed = true;
+        }
+    }
+    public void Dispose()
+    {
+        SettingsViewModel.SettingsChanged -= StateHasChanged;
+    }
+
+    private async Task Load()
+    {
+        await Vm.LoadAsync();
+        StateHasChanged();
+    }
+
+    private void AddExercise()
+        => Nav.NavigateTo("/add-exercise");
+
+    private void Open(int id)
+        => Nav.NavigateTo($"/exercise/{id}");
+
+    private async Task Delete(int id)
+    {
+        await Vm.DeleteExerciseAsync(id);
+        StateHasChanged();
+    }
+
+    private async Task Reset()
+    {
+        bool confirm = await JS.InvokeAsync<bool>(
+            "confirm",
+            "Möchtest du wirklich die komplette Datenbank löschen?"
+        );
+
+        if (!confirm)
+            return;
+
+        await Vm.ResetDatabaseAsync();
+        StateHasChanged();
+    }
+
+    private void Toggle(ExerciseGroup group)
+    {
+        Vm.ToggleGroup(group.Name);
+        StateHasChanged();
+    }
+
+    private string GetColor(double percent)
+    {
+        percent = Math.Clamp(percent, 0, 100);
+
+        if (percent < 30) return "#e74c3c";
+        if (percent < 70) return "#f39c12";
+        return "#2ecc71";
+    }
+    private void OpenGoalHistory()
+    => Nav.NavigateTo("/goal-history");
+}

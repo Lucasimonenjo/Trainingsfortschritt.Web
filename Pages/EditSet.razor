@@ -1,0 +1,132 @@
+﻿@page "/edit-set/{SetId:int}"
+
+@using Trainingsfortschritt.Web.ViewModels
+@inject EditSetViewModel Vm
+@inject NavigationManager Nav
+@inject IJSRuntime JS
+
+<h3>Set bearbeiten</h3>
+
+@if (!Vm.IsLoaded)
+{
+    <p>Lade Set...</p>
+}
+else
+{
+    <div style="max-width:500px; display:flex; flex-direction:column; gap:10px;">
+
+        <!-- WEIGHT -->
+        <label>Gewicht (kg)</label>
+        <input type="number"
+               @bind="Vm.Weight"
+               placeholder="z.B. 80"
+               style="padding:8px;" />
+
+        <!-- REPS -->
+        <label>Wiederholungen</label>
+        <input type="text"
+               @bind="Vm.RepsInput"
+               placeholder="z.B. 10 oder 3x8"
+               style="padding:8px;" />
+
+        <!-- SEAT -->
+        <label>Sitzeinstellung</label>
+        <input type="text"
+               @bind="Vm.SeatSetting"
+               placeholder="optional"
+               style="padding:8px;" />
+
+        <!-- NOTES -->
+        <label>Notizen</label>
+        <input type="text"
+               @bind="Vm.Notes"
+               placeholder="optional"
+               style="padding:8px;" />
+
+        <!-- TAGS -->
+        <h4 style="margin-top:10px;">Tags</h4>
+
+        <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:6px;">
+
+            @foreach (var tag in Vm.Tags)
+            {
+                <div @onclick="() => ToggleTag(tag)"
+                     style="
+                    padding:10px;
+                    border-radius:10px;
+                    text-align:center;
+                    cursor:pointer;
+                    background:@(tag.IsSelected ? "#2ecc71" : "#ddd");
+                    color:@(tag.IsSelected ? "white" : "black");
+                    user-select:none;">
+                    @tag.Name
+                </div>
+            }
+
+        </div>
+
+        <!-- BUTTONS -->
+        <button @onclick="Save"
+                style="margin-top:15px; padding:10px;">
+            Speichern
+        </button>
+
+        <button @onclick="Cancel"
+                style="padding:10px; background:#ccc;">
+            Abbrechen
+        </button>
+
+    </div>
+}
+
+@code {
+
+    [Parameter]
+    public int SetId { get; set; }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        Vm.SetId = SetId;
+        await Vm.LoadAsync();
+    }
+
+    private void ToggleTag(EditSetViewModel.TagItem tag)
+    {
+        Vm.ToggleTag(tag);
+    }
+
+    private async Task Save()
+    {
+        try
+        {
+            // SAVE
+            await Vm.SaveAsync();
+
+            // =========================
+            // GOAL MESSAGE HOLEN
+            // =========================
+            var goalMessage = await Vm.GetGoalMessageAsync();
+
+            if (!string.IsNullOrWhiteSpace(goalMessage))
+            {
+                await JS.InvokeVoidAsync(
+                    "sessionStorage.setItem",
+                    "goalMessage",
+                    goalMessage
+                );
+            }
+
+            // NAVIGATION
+            Nav.NavigateTo($"/exercise/{Vm.ExerciseId}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
+    }
+
+    private void Cancel()
+    {
+        Nav.NavigateTo($"/exercise/{Vm.ExerciseId}");
+    }
+}

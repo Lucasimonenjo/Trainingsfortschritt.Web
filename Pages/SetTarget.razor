@@ -1,0 +1,132 @@
+﻿@page "/set-target/{ExerciseId:int}"
+
+@inject SetTargetViewModel Vm
+@inject NavigationManager Nav
+@using Trainingsfortschritt.Web.ViewModels
+
+<div style="display:flex; align-items:center; gap:12px; margin-bottom:20px;">
+
+    <button class="btn btn-secondary"
+            @onclick="GoHome">
+        🏠
+    </button>
+    <button class="btn btn-secondary"
+            @onclick="GoBack">
+        ←
+    </button>
+
+    <h3 style="margin:0;">🎯 Ziel einstellen</h3>
+
+</div>
+
+@if (!Vm.IsLoaded)
+{
+    <p>Lade...</p>
+}
+else
+{
+    <div style="
+        display:flex;
+        flex-direction:column;
+        gap:16px;
+        max-width:400px;">
+
+        <!-- GEWICHT -->
+        <div>
+            <label>Zielgewicht (kg)</label>
+
+            <input type="number"
+                   @bind="Vm.TargetWeightString"
+                   class="form-control" />
+        </div>
+
+        <!-- REPS -->
+        <div>
+            <label>
+                Ziel Wiederholungen
+                (optional, z. B. 3x8)
+            </label>
+
+            <input type="text"
+                   @bind="Vm.TargetRepsInput"
+                   class="form-control" />
+        </div>
+
+        <!-- ERROR -->
+        @if (!string.IsNullOrWhiteSpace(_error))
+        {
+            <div style="
+                background:#ffdddd;
+                color:darkred;
+                padding:10px;
+                border-radius:8px;">
+                @_error
+            </div>
+        }
+
+        <!-- BUTTONS -->
+        <div style="
+            display:flex;
+            gap:12px;
+            margin-top:20px;">
+
+            <button class="btn btn-primary"
+                    @onclick="SaveAsync"
+                    disabled="@Vm.IsBusy">
+                Speichern
+            </button>
+
+            <button class="btn btn-secondary"
+                    @onclick="Cancel">
+                Abbrechen
+            </button>
+
+        </div>
+
+    </div>
+}
+
+@code {
+
+    [Parameter]
+    public int ExerciseId { get; set; }
+
+    private string? _error;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        Vm.ExerciseId = ExerciseId;
+
+        await Vm.LoadAsync();
+    }
+
+    private async Task SaveAsync()
+    {
+        _error = null;
+
+        if (string.IsNullOrWhiteSpace(Vm.TargetWeightString)
+            && string.IsNullOrWhiteSpace(Vm.TargetRepsInput))
+        {
+            _error = "Bitte mindestens Gewicht oder Wiederholungen eingeben.";
+            return;
+        }
+
+        await Vm.SaveAsync();
+
+        Nav.NavigateTo($"/exercise/{ExerciseId}");
+    }
+
+    private void Cancel()
+    {
+        Nav.NavigateTo($"/exercise/{ExerciseId}");
+    }
+
+    private void GoHome()
+    {
+        Nav.NavigateTo("/");
+    }
+    private void GoBack()
+    {
+        Nav.NavigateTo("javascript:history.back()");
+    }
+}

@@ -1,0 +1,71 @@
+﻿@inherits LayoutComponentBase
+
+@using Trainingsfortschritt.Web.ViewModels
+@using Trainingsfortschritt.Web.Pages
+
+@inject SettingsViewModel Vm
+
+@implements IDisposable
+
+<div class="page @GetThemeClass()">
+
+    <div class="sidebar">
+        <NavMenu />
+    </div>
+
+    <main>
+
+        <div class="top-row px-4">
+            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">
+                About
+            </a>
+        </div>
+
+        <article class="content px-4">
+            @Body
+        </article>
+
+    </main>
+
+    <AchievementPopup />
+
+</div>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        SettingsViewModel.ThemeChanged += OnThemeChanged;
+
+        try
+        {
+            await Vm.LoadAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("LOAD ERROR: " + ex);
+        }
+    }
+
+    private void OnThemeChanged()
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    private string GetThemeClass()
+    {
+        return Vm?.AppTheme switch
+        {
+            "Dark" => "theme-dark",
+            "Light" => "theme-light",
+            _ => "theme-system"
+        };
+    }
+
+    private bool _subscribed;
+
+    public void Dispose()
+    {
+        if (_subscribed)
+            SettingsViewModel.ThemeChanged -= OnThemeChanged;
+    }
+}

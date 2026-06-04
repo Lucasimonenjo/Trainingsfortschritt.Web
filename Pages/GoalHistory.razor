@@ -1,0 +1,84 @@
+﻿@page "/goal-history"
+
+@using Trainingsfortschritt.Web.ViewModels
+@inject GoalHistoryViewModel Vm
+@inject NavigationManager Nav
+
+<div style="
+    display:flex;
+    align-items:center;
+    gap:12px;
+    margin-bottom:20px;">
+
+    <button class="btn btn-secondary" @onclick="GoHome">🏠</button>
+    <button class="btn btn-secondary" @onclick="GoBack">←</button>
+
+    <h3 style="margin:0;">
+        Goal History
+    </h3>
+</div>
+
+@if (!Vm.IsLoaded)
+{
+    <p>Lade Historie...</p>
+}
+else
+{
+    <input class="form-control mb-3"
+           placeholder="Nach Übung suchen..."
+           @bind="Vm.SearchText" />
+
+    <button class="btn btn-danger mb-3"
+            @onclick="ClearHistory">
+        Historie löschen
+    </button>
+
+    @if (Vm.FilteredHistory.Count == 0)
+    {
+        <p>Keine Einträge gefunden.</p>
+    }
+    else
+    {
+        @foreach (var item in Vm.FilteredHistory)
+        {
+            <div class="card p-3 mb-2">
+
+                <b>@item.ExerciseName</b><br />
+
+                Ziel: @item.TargetWeight kg<br />
+
+                @if (item.Sets > 0 && item.Reps > 0)
+                {
+                    <span>
+                        Wiederholungen: @item.Sets x @item.Reps
+                    </span>
+                }
+
+                <br />
+
+                Erreicht: @item.DateReached.ToString("dd.MM.yyyy")<br />
+
+                Dauer: @item.DaysNeeded Tage<br />
+
+                Trainingseinheiten: @item.WorkoutsNeeded<br />
+
+            </div>
+        }
+    }
+}
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        await Vm.LoadAsync();
+    }
+
+    private void GoBack()
+        => Nav.NavigateTo("/");
+
+    private void GoHome()
+        => Nav.NavigateTo("/");
+
+    private async Task ClearHistory()
+        => await Vm.ClearAsync();
+}
