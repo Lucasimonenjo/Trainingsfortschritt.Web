@@ -14,7 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Trainingsfortschritt.Core\Trainingsfortschritt.Core.csproj" />
+    <ProjectReference Include="Trainingsfortschritt.Core\Trainingsfortschritt.Core.csproj" />
   </ItemGroup>
 
 </Project>
