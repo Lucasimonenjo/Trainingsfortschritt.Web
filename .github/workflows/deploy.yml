@@ -23,10 +23,10 @@ jobs:
           dotnet-version: 10.0.x
 
       - name: Restore
-        run: dotnet restore
+        run: dotnet restore Trainingsfortschritt.Web/Trainingsfortschritt.Web.csproj
 
       - name: Publish
-        run: dotnet publish Trainingsfortschritt.Web.csproj -c Release -o publish
+        run: dotnet publish Trainingsfortschritt.Web/Trainingsfortschritt.Web.csproj -c Release -o publish
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
@@ -36,6 +36,10 @@ jobs:
   deploy:
     needs: build
     runs-on: ubuntu-latest
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
       - id: deployment
