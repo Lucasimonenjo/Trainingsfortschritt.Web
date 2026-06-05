@@ -94,7 +94,7 @@
 
             await Task.Delay(150);
 
-            Nav.NavigateTo("/", forceLoad: true);
+            Nav.NavigateTo("/Trainingsfortschritt.Web/", forceLoad: true);
         }
         catch (Exception ex)
         {
@@ -108,12 +108,12 @@
 
     private void CancelAsync()
     {
-        Nav.NavigateTo("/", forceLoad: true);
+        Nav.NavigateTo("/Trainingsfortschritt.Web/", forceLoad: true);
     }
 
     private void GoHome()
     {
-        Nav.NavigateTo("/");
+        Nav.NavigateTo("/Trainingsfortschritt.Web/");
     }
 
     private void GoBack()
