@@ -176,10 +176,10 @@ else
     }
 
     private void AddSet()
-        => Nav.NavigateTo($"/add-set/{Id}");
+        => Nav.NavigateTo($"add-set/{Id}");
 
     private void SetTarget()
-        => Nav.NavigateTo($"/set-target/{Id}");
+        => Nav.NavigateTo($"set-target/{Id}");
 
     private async Task RemoveTarget()
     {
@@ -194,7 +194,7 @@ else
     }
 
     private void EditSet(int setId)
-        => Nav.NavigateTo($"/edit-set/{setId}");
+        => Nav.NavigateTo($"edit-set/{setId}");
 
     private void GoHome()
         => Nav.NavigateTo("/");
