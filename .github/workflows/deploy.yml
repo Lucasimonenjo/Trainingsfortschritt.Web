@@ -30,14 +30,14 @@ jobs:
 
       - name: Show publish folder structure
         run: |
-          echo "=== publish ==="
-          find publish -maxdepth 3 -type d -print
-          echo "=== publish/wwwroot ==="
-          find publish/wwwroot -maxdepth 3 -type d -print
-          echo "=== publish/wwwroot/_framework ==="
-          find publish/wwwroot/_framework -maxdepth 3 -type f -print || echo "_framework not found"
+          echo "=== publish ===" > tree.txt
+          find publish -maxdepth 5 -print >> tree.txt
+          echo "=== publish/wwwroot ===" >> tree.txt
+          find publish/wwwroot -maxdepth 5 -print >> tree.txt
+          echo "=== publish/wwwroot/_framework ===" >> tree.txt
+          find publish/wwwroot/_framework -maxdepth 5 -print >> tree.txt 2>/dev/null || echo "_framework not found" >> tree.txt
 
-
+          cat tree.txt
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
