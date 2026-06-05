@@ -185,10 +185,10 @@ if (progress < 0) progress = 0;
     }
 
     private void AddExercise()
-        => Nav.NavigateTo("/add-exercise");
+        => Nav.NavigateTo("add-exercise");
 
     private void Open(int id)
-        => Nav.NavigateTo($"/exercise/{id}");
+        => Nav.NavigateTo($"exercise/{id}");
 
     private async Task Delete(int id)
     {
@@ -225,5 +225,5 @@ if (progress < 0) progress = 0;
         return "#2ecc71";
     }
     private void OpenGoalHistory()
-    => Nav.NavigateTo("/goal-history");
+    => Nav.NavigateTo("goal-history");
 }
