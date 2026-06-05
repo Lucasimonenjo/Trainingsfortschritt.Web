@@ -28,10 +28,17 @@ jobs:
       - name: Publish
         run: dotnet publish Trainingsfortschritt.Web.csproj -c Release -o publish --nologo -p:StaticWebAssetBasePath=/
 
+      - name: Show publish folder structure
+        run: |
+          echo "=== publish ==="
+          ls -R publish
+          echo "=== publish/wwwroot ==="
+          ls -R publish/wwwroot
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: publish/wwwroot/Trainingsfortschritt.Web
+          path: publish/wwwroot
 
   deploy:
     needs: build
