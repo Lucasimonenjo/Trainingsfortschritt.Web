@@ -31,7 +31,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: publish/wwwroot
+          path: publish/wwwroot/Trainingsfortschritt.Web
 
   deploy:
     needs: build
