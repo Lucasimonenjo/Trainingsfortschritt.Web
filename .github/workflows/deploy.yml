@@ -21,18 +21,18 @@ jobs:
       - name: Publish
         run: dotnet publish Trainingsfortschritt.Web.csproj -c Release -o publish --nologo -p:StaticWebAssetBasePath=/Trainingsfortschritt.Web
       - name: Fix blazor script tags in index.html
-       run: |
-        WWWROOT="publish/wwwroot/Trainingsfortschritt.Web"
+        run: |
+          WWWROOT="publish/wwwroot/Trainingsfortschritt.Web"
 
-        BLAZOR_JS=$(ls $WWWROOT/_framework/blazor.webassembly.*.js | xargs basename)
-        echo "Blazor JS: $BLAZOR_JS"
+          BLAZOR_JS=$(ls $WWWROOT/_framework/blazor.webassembly.*.js | xargs basename)
+          echo "Blazor JS: $BLAZOR_JS"
 
-        REPLACEMENT="<script src=\"_framework\/$BLAZOR_JS\" type=\"module\"><\/script>"
+          REPLACEMENT="<script src=\"_framework\/$BLAZOR_JS\" type=\"module\"><\/script>"
 
-        sed -i "s|<!--BLAZOR_SCRIPT_PLACEHOLDER-->|$REPLACEMENT|" $WWWROOT/index.html
+          sed -i "s|<!--BLAZOR_SCRIPT_PLACEHOLDER-->|$REPLACEMENT|" $WWWROOT/index.html
 
-        echo "=== Ergebnis ==="
-        grep "script" $WWWROOT/index.html | grep framework
+          echo "=== Ergebnis ==="
+          grep "script" $WWWROOT/index.html | grep framework
       - name: Add .nojekyll
         run: touch publish/wwwroot/Trainingsfortschritt.Web/.nojekyll
       - name: Upload artifact
