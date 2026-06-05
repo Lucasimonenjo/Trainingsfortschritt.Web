@@ -26,8 +26,7 @@ jobs:
         run: dotnet restore Trainingsfortschritt.Web.csproj
 
       - name: Publish
-        run: dotnet publish Trainingsfortschritt.Web.csproj -c Release -o publish --nologo \
-             -p:StaticWebAssetBasePath=/
+        run: dotnet publish Trainingsfortschritt.Web.csproj -c Release -o publish --nologo -p:StaticWebAssetBasePath=/
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
