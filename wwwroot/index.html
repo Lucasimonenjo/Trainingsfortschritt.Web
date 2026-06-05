@@ -28,18 +28,10 @@
     </div>
 
     <!-- =========================
-         NATIVE AOT BOOTLOADER (.NET 10)
-         dotnet.native.js lädt automatisch die Datei mit Hash
+         KORREKTER BOOTLOADER (.NET 10 WebAssembly)
+         KEIN Native AOT
     ========================== -->
-    <script type="module">
-        import { dotnet } from './_framework/dotnet.native.js';
-
-        const config = await dotnet
-            .withApplicationArguments([])
-            .create();
-
-        await dotnet.run();
-    </script>
+    <script src="_framework/blazor.webassembly.js"></script>
 
     <!-- =========================
          STORAGE API
