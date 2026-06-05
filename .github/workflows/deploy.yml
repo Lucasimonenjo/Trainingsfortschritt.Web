@@ -33,8 +33,8 @@ jobs:
           # dotnet.js Alias erstellen
           echo "export * from './$DOTNET_JS'; export { default } from './$DOTNET_JS';" > $WWWROOT/_framework/dotnet.js
 
-          # index.html aktualisieren - blazor als module mit manuellem start
-          REPLACEMENT="<script src=\"_framework\/$BLAZOR_JS\" autostart=\"false\"><\/script>\n    <script type=\"module\">\n        import { Blazor } from '.\/\_framework\/$BLAZOR_JS';\n        await Blazor.start();\n    <\/script>"
+          # index.html aktualisieren
+          REPLACEMENT="<script src=\"_framework\/$BLAZOR_JS\" autostart=\"false\"><\/script>\n    <script>\n        document.addEventListener('DOMContentLoaded', function() {\n            Blazor.start();\n        });\n    <\/script>"
           sed -i "s|<!--BLAZOR_SCRIPT_PLACEHOLDER-->|$REPLACEMENT|" $WWWROOT/index.html
 
           echo "=== Ergebnis index.html ==="
