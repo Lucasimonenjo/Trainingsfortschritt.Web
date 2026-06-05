@@ -28,14 +28,17 @@
     </div>
 
     <!-- =========================
-         NEUER .NET 8/9/10 BOOTLOADER
+         NATIVE AOT BOOTLOADER (.NET 8/9/10)
+         dotnet.native.js lädt automatisch die Datei mit Hash
     ========================== -->
-    <script src="_framework/dotnet.js" autostart="false"></script>
-    <script>
-        dotnet
+    <script type="module">
+        import { dotnet } from './_framework/dotnet.native.js';
+
+        const config = await dotnet
             .withApplicationArguments([])
-            .create()
-            .then(() => dotnet.run());
+            .create();
+
+        await dotnet.run();
     </script>
 
     <!-- =========================
