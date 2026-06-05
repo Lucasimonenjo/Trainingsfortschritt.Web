@@ -20,6 +20,18 @@ jobs:
         run: dotnet restore Trainingsfortschritt.Web.csproj
       - name: Publish
         run: dotnet publish Trainingsfortschritt.Web.csproj -c Release -o publish --nologo -p:StaticWebAssetBasePath=/Trainingsfortschritt.Web
+      - name: Fix blazor script tags in index.html
+        run: |
+          WWWROOT="publish/wwwroot/Trainingsfortschritt.Web"
+    
+          # Tatsächliche Dateinamen aus dem _framework-Ordner holen
+          DOTNET_JS=$(ls $WWWROOT/_framework/dotnet.*.js | head -1 | xargs basename)
+          BLAZOR_JS=$(ls $WWWROOT/_framework/blazor.webassembly.*.js | head -1 | xargs basename)
+    
+          echo "Found: $DOTNET_JS and $BLAZOR_JS"
+    
+          # index.html mit den korrekten Dateinamen überschreiben
+          sed -i "s|<script src=\"_framework/blazor.webassembly.js\"></script>|<script src=\"_framework/$DOTNET_JS\"></script>\n    <script src=\"_framework/$BLAZOR_JS\"></script>|" $WWWROOT/index.html
       - name: Add .nojekyll
         run: touch publish/wwwroot/Trainingsfortschritt.Web/.nojekyll
 
