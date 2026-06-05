@@ -20,6 +20,12 @@ jobs:
         run: dotnet restore Trainingsfortschritt.Web.csproj
       - name: Publish
         run: dotnet publish Trainingsfortschritt.Web.csproj -c Release -o publish --nologo -p:StaticWebAssetBasePath=/Trainingsfortschritt.Web
+      - name: Debug JS files
+        run: |
+          echo "=== Alle JS Dateien im publish-Ordner ==="
+          find publish -name "*.js" | grep -i "dotnet\|blazor" | head -20
+          echo "=== Vollständige Struktur ==="
+          find publish -maxdepth 6 -name "*.js" | head -30
       - name: Debug _framework folder
         run: |
           echo "=== _framework Inhalt ==="
