@@ -1,57 +1,37 @@
 name: Deploy Blazor WebAssembly
-
 on:
   push:
     branches: [ main ]
   workflow_dispatch:
-
 permissions:
   contents: read
   pages: write
   id-token: write
-
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
-
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 10.0.x
-
       - name: Restore
         run: dotnet restore Trainingsfortschritt.Web.csproj
-
       - name: Publish
-        run: dotnet publish Trainingsfortschritt.Web.csproj -c Release -o publish --nologo -p:StaticWebAssetBasePath=/
-
-      - name: Show publish folder structure
-        run: |
-          echo "=== publish ===" > tree.txt
-          find publish -maxdepth 5 -print >> tree.txt
-          echo "=== publish/wwwroot ===" >> tree.txt
-          find publish/wwwroot -maxdepth 5 -print >> tree.txt
-          echo "=== publish/wwwroot/_framework ===" >> tree.txt
-          find publish/wwwroot/_framework -maxdepth 5 -print >> tree.txt 2>/dev/null || echo "_framework not found" >> tree.txt
-
-          cat tree.txt
-
+        run: dotnet publish Trainingsfortschritt.Web.csproj -c Release -o publish --nologo -p:StaticWebAssetBasePath=/Trainingsfortschritt.Web
+      - name: Add .nojekyll          # ← NEU
+        run: touch publish/wwwroot/.nojekyll
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: publish/wwwroot
-
   deploy:
     needs: build
     runs-on: ubuntu-latest
-
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
