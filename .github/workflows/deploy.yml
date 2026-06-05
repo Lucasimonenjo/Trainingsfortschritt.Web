@@ -17,36 +17,25 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # =========================
-      # .NET SETUP
-      # =========================
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
 
-      # =========================
-      # RESTORE
-      # =========================
       - name: Restore
         run: dotnet restore Trainingsfortschritt.Web.csproj
 
-      # =========================
-      # PUBLISH (GitHub Pages Fix)
-      # =========================
       - name: Publish
         run: dotnet publish Trainingsfortschritt.Web.csproj -c Release -o publish
 
-      # =========================
-      # FIX BASE HREF (WICHTIG)
-      # =========================
-      - name: Fix base href for GitHub Pages
-        run: |
-          sed -i 's|<base href="/"|<base href="/Trainingsfortschritt.Web/"|g' publish/wwwroot/index.html
+      # 🔥 SPA FIX 1: fallback routing
+      - name: Copy index.html to 404.html
+        run: cp publish/wwwroot/index.html publish/wwwroot/404.html
 
-      # =========================
-      # UPLOAD ARTIFACT
-      # =========================
+      # 🔥 SPA FIX 2: correct base path
+      - name: Fix base href
+        run: sed -i 's|<base href="/"|<base href="/Trainingsfortschritt.Web/"|g' publish/wwwroot/index.html
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
