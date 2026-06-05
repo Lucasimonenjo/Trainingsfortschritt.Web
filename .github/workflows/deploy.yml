@@ -33,12 +33,12 @@ jobs:
           # dotnet.js Alias erstellen
           echo "export * from './$DOTNET_JS'; export { default } from './$DOTNET_JS';" > $WWWROOT/_framework/dotnet.js
 
-          # index.html aktualisieren
-          REPLACEMENT="<script src=\"_framework\/$BLAZOR_JS\" type=\"module\"><\/script>"
+          # index.html aktualisieren - blazor als module mit manuellem start
+          REPLACEMENT="<script src=\"_framework\/$BLAZOR_JS\" autostart=\"false\"><\/script>\n    <script type=\"module\">\n        import { Blazor } from '.\/\_framework\/$BLAZOR_JS';\n        await Blazor.start();\n    <\/script>"
           sed -i "s|<!--BLAZOR_SCRIPT_PLACEHOLDER-->|$REPLACEMENT|" $WWWROOT/index.html
 
           echo "=== Ergebnis index.html ==="
-          grep "script" $WWWROOT/index.html | grep framework
+          grep -A5 "framework" $WWWROOT/index.html
           echo "=== dotnet.js Inhalt ==="
           cat $WWWROOT/_framework/dotnet.js
       - name: Add .nojekyll
