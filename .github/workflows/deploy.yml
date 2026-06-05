@@ -31,11 +31,12 @@ jobs:
       - name: Show publish folder structure
         run: |
           echo "=== publish ==="
-          ls -R publish
+          find publish -maxdepth 3 -type d -print
           echo "=== publish/wwwroot ==="
-          ls -R publish/wwwroot
+          find publish/wwwroot -maxdepth 3 -type d -print
           echo "=== publish/wwwroot/_framework ==="
-          ls -R publish/wwwroot/_framework || echo "_framework not found"
+          find publish/wwwroot/_framework -maxdepth 3 -type f -print || echo "_framework not found"
+
 
 
       - name: Upload artifact
