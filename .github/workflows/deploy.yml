@@ -25,13 +25,14 @@ jobs:
           WWWROOT="publish/wwwroot/Trainingsfortschritt.Web"
 
           DOTNET_JS=$(ls $WWWROOT/_framework/dotnet.*.js | grep -v native | grep -v runtime | xargs basename)
-
           echo "Dotnet JS: $DOTNET_JS"
 
-          sed -i "s|<script src=\"_framework/blazor.webassembly.js\"></script>|<script src=\"_framework/$DOTNET_JS\" type=\"module\"></script>|" $WWWROOT/index.html
+          REPLACEMENT="<script type=\"module\">\n        import { dotnet } from './_framework\/$DOTNET_JS';\n        await dotnet.withApplicationArguments().create();\n        await dotnet.run();\n    <\/script>"
+
+          sed -i "s|<!--BLAZOR_SCRIPT_PLACEHOLDER-->|$REPLACEMENT|" $WWWROOT/index.html
 
           echo "=== Ergebnis ==="
-          grep "script src" $WWWROOT/index.html
+          grep -A5 "module" $WWWROOT/index.html | head -10
       - name: Add .nojekyll
         run: touch publish/wwwroot/Trainingsfortschritt.Web/.nojekyll
       - name: Upload artifact
