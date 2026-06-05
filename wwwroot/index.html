@@ -22,95 +22,76 @@
     </div>
 
     <div id="blazor-error-ui">
-        An unhandled error has occurred.
-        <a href=".">Reload</a>
+        Ein Fehler ist aufgetreten.
+        <a href=".">Neu laden</a>
         <span class="dismiss">🗙</span>
     </div>
 
-    <script src="_framework/blazor.webassembly.js"></script>
+    <!-- =========================
+         NEUER .NET 8/9/10 BOOTLOADER
+    ========================== -->
+    <script src="_framework/dotnet.js" autostart="false"></script>
+    <script>
+        dotnet
+            .withApplicationArguments([])
+            .create()
+            .then(() => dotnet.run());
+    </script>
 
     <!-- =========================
          STORAGE API
     ========================== -->
     <script>
-        // =========================
-        // STORAGE API (SAFE)
-        // =========================
         window.idbStorage = {
-            get: function (key) {
-                try {
-                    return localStorage.getItem(key);
-                } catch (e) {
-                    console.error("idbStorage.get failed", e);
-                    return null;
-                }
+            get: key => {
+                try { return localStorage.getItem(key); }
+                catch (e) { console.error("idbStorage.get failed", e); return null; }
             },
-            set: function (key, value) {
-                try {
-                    localStorage.setItem(key, value);
-                } catch (e) {
-                    console.error("idbStorage.set failed", e);
-                }
+            set: (key, value) => {
+                try { localStorage.setItem(key, value); }
+                catch (e) { console.error("idbStorage.set failed", e); }
             },
-            remove: function (key) {
-                try {
-                    localStorage.removeItem(key);
-                } catch (e) {
-                    console.error("idbStorage.remove failed", e);
-                }
+            remove: key => {
+                try { localStorage.removeItem(key); }
+                catch (e) { console.error("idbStorage.remove failed", e); }
             },
-            clear: function () {
-                try {
-                    localStorage.clear();
-                } catch (e) {
-                    console.error("idbStorage.clear failed", e);
-                }
-            }
-        };
-        window.idbStorageSync = {
-            get: function (key) {
-                try {
-                    return localStorage.getItem(key);
-                } catch (e) {
-                    return null;
-                }
-            },
-            set: function (key, value) {
-                try {
-                    localStorage.setItem(key, value);
-                } catch (e) { }
-            },
-            remove: function (key) {
-                try {
-                    localStorage.removeItem(key);
-                } catch (e) { }
+            clear: () => {
+                try { localStorage.clear(); }
+                catch (e) { console.error("idbStorage.clear failed", e); }
             }
         };
 
-        // =========================
-        // DOWNLOAD FILE
-        // =========================
+        window.idbStorageSync = {
+            get: key => {
+                try { return localStorage.getItem(key); }
+                catch { return null; }
+            },
+            set: (key, value) => {
+                try { localStorage.setItem(key, value); }
+                catch { }
+            },
+            remove: key => {
+                try { localStorage.removeItem(key); }
+                catch { }
+            }
+        };
+
         window.downloadFile = function (filename, content) {
             try {
                 const blob = new Blob([content], { type: "application/json" });
                 const url = URL.createObjectURL(blob);
-
                 const a = document.createElement("a");
                 a.href = url;
                 a.download = filename || "export.json";
                 document.body.appendChild(a);
                 a.click();
                 a.remove();
-
                 setTimeout(() => URL.revokeObjectURL(url), 1000);
             } catch (e) {
                 console.error("downloadFile failed", e);
             }
         };
 
-        // =========================
-        // SHARE FILE
-        // =========================
         window.shareExport = async function (filename, content) {
             try {
                 if (!navigator.share) {
@@ -118,11 +99,7 @@
                     return;
                 }
 
-                const file = new File(
-                    [content],
-                    filename || "export.json",
-                    { type: "application/json" }
-                );
+                const file = new File([content], filename || "export.json", { type: "application/json" });
 
                 if (navigator.canShare && navigator.canShare({ files: [file] })) {
                     await navigator.share({
@@ -131,7 +108,6 @@
                         text: "Meine Trainingsdaten"
                     });
                 } else {
-                    // fallback ohne file
                     await navigator.share({
                         title: "Trainings Export",
                         text: "Meine Trainingsdaten"
@@ -142,11 +118,8 @@
             }
         };
 
-        // =========================
-        // FILE PICKER (IMPORT)
-        // =========================
         window.pickFile = function () {
-            return new Promise((resolve) => {
+            return new Promise(resolve => {
                 try {
                     const input = document.createElement("input");
                     input.type = "file";
@@ -154,23 +127,11 @@
 
                     input.onchange = e => {
                         const file = e.target.files?.[0];
-
-                        if (!file) {
-                            resolve(null);
-                            return;
-                        }
+                        if (!file) { resolve(null); return; }
 
                         const reader = new FileReader();
-
-                        reader.onload = evt => {
-                            resolve({
-                                name: file.name,
-                                content: evt.target.result
-                            });
-                        };
-
+                        reader.onload = evt => resolve({ name: file.name, content: evt.target.result });
                         reader.onerror = () => resolve(null);
-
                         reader.readAsText(file);
                     };
 
@@ -181,19 +142,13 @@
                 }
             });
         };
-            window.appNotifications = {
-                alert: function (title, message) {
-                alert(title + "\n\n" + message);
-            }
-        };
-    
 
-        // =========================
-        // DEBUG
-        // =========================
+        window.appNotifications = {
+            alert: (title, message) => alert(title + "\n\n" + message)
+        };
+
         console.log("JS bridge loaded");
     </script>
 
 </body>
-
 </html>
