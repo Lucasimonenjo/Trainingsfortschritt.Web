@@ -26,11 +26,7 @@ jobs:
         run: dotnet restore Trainingsfortschritt.Web.csproj
 
       - name: Publish
-        run: dotnet publish Trainingsfortschritt.Web.csproj -c Release -o publish -p:BlazorWebAssemblyBasePath=/Trainingsfortschritt.Web/
-
-      - name: Fix base path in index.html
-        run: |
-          sed -i 's|<base href="/" />|<base href="/Trainingsfortschritt.Web/" />|g' publish/wwwroot/index.html
+        run: dotnet publish Trainingsfortschritt.Web.csproj -c Release -o publish -p:StaticWebAssetBasePath=/Trainingsfortschritt.Web/
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
