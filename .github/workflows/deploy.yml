@@ -34,6 +34,9 @@ jobs:
           ls -R publish
           echo "=== publish/wwwroot ==="
           ls -R publish/wwwroot
+          echo "=== publish/wwwroot/_framework ==="
+          ls -R publish/wwwroot/_framework || echo "_framework not found"
+
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
