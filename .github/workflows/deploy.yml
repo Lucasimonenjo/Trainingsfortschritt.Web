@@ -20,35 +20,26 @@ jobs:
         run: dotnet restore Trainingsfortschritt.Web.csproj
       - name: Publish
         run: dotnet publish Trainingsfortschritt.Web.csproj -c Release -o publish --nologo -p:StaticWebAssetBasePath=/Trainingsfortschritt.Web
-      - name: Debug JS files
-        run: |
-          echo "=== Alle JS Dateien im publish-Ordner ==="
-          find publish -name "*.js" | grep -i "dotnet\|blazor" | head -20
-          echo "=== Vollständige Struktur ==="
-          find publish -maxdepth 6 -name "*.js" | head -30
-      - name: Debug _framework folder
-        run: |
-          echo "=== _framework Inhalt ==="
-          ls -la publish/wwwroot/Trainingsfortschritt.Web/_framework/ | head -30
       - name: Fix blazor script tags in index.html
         run: |
           WWWROOT="publish/wwwroot/Trainingsfortschritt.Web"
-    
-          # Tatsächliche Dateinamen aus dem _framework-Ordner holen
-          DOTNET_JS=$(ls $WWWROOT/_framework/dotnet.*.js | head -1 | xargs basename)
-          BLAZOR_JS=$(ls $WWWROOT/_framework/blazor.webassembly.*.js | head -1 | xargs basename)
-    
-          echo "Found: $DOTNET_JS and $BLAZOR_JS"
-    
-          # index.html mit den korrekten Dateinamen überschreiben
+
+          DOTNET_JS=$(ls $WWWROOT/_framework/dotnet.*.js | grep -v native | grep -v runtime | xargs basename)
+          BLAZOR_JS=$(ls $WWWROOT/_framework/blazor.webassembly.*.js | xargs basename)
+
+          echo "Dotnet JS: $DOTNET_JS"
+          echo "Blazor JS: $BLAZOR_JS"
+
           sed -i "s|<script src=\"_framework/blazor.webassembly.js\"></script>|<script src=\"_framework/$DOTNET_JS\"></script>\n    <script src=\"_framework/$BLAZOR_JS\"></script>|" $WWWROOT/index.html
+
+          echo "=== Ergebnis ==="
+          grep "script src" $WWWROOT/index.html
       - name: Add .nojekyll
         run: touch publish/wwwroot/Trainingsfortschritt.Web/.nojekyll
-
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: publish/wwwroot/Trainingsfortschritt.Web   # ← angepasst
+          path: publish/wwwroot/Trainingsfortschritt.Web
   deploy:
     needs: build
     runs-on: ubuntu-latest
