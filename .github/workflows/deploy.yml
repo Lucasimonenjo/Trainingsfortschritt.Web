@@ -20,6 +20,10 @@ jobs:
         run: dotnet restore Trainingsfortschritt.Web.csproj
       - name: Publish
         run: dotnet publish Trainingsfortschritt.Web.csproj -c Release -o publish --nologo -p:StaticWebAssetBasePath=/Trainingsfortschritt.Web
+      - name: Debug _framework folder
+        run: |
+          echo "=== _framework Inhalt ==="
+          ls -la publish/wwwroot/Trainingsfortschritt.Web/_framework/ | head -30
       - name: Fix blazor script tags in index.html
         run: |
           WWWROOT="publish/wwwroot/Trainingsfortschritt.Web"
