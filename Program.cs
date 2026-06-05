@@ -9,34 +9,32 @@ using Trainingsfortschritt.Web.ViewModels;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 
-builder.RootComponents.Add<App>("#app");
+// =========================
+// BASE PATH FIX (WICHTIG)
+// =========================
+var baseHref = "/Trainingsfortschritt.Web/";
+builder.RootComponents.Add<App>("#app", baseHref);
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
 // =========================
-// HTTP
+// HTTP (MUSS BaseAddress korrekt haben)
 // =========================
 builder.Services.AddScoped(sp =>
     new HttpClient
     {
-        BaseAddress = new Uri(builder.HostEnvironment.BaseAddress)
+        BaseAddress = new Uri(builder.HostEnvironment.BaseAddress + "Trainingsfortschritt.Web/")
     });
 
 // =========================
 // CORE SERVICES
 // =========================
-
-// Plattform (OK als Singleton)
 builder.Services.AddSingleton<IPlatformServices, WebPlatformServices>();
-
-// ⚠️ IndexedDb NICHT Singleton (WICHTIG FIX)
 builder.Services.AddScoped<IndexedDbService>();
-
 builder.Services.AddScoped<IDatabaseService, WebDatabaseService>();
-
 builder.Services.AddScoped<IStorageService, WebStorageService>();
 
 // =========================
-// ACHIEVEMENTS (BLEIBT SCOPED)
+// ACHIEVEMENTS
 // =========================
 builder.Services.AddScoped<AchievementService>();
 
@@ -58,13 +56,11 @@ builder.Services.AddScoped<AchievementsViewModel>();
 // =========================
 // NOTIFICATION
 // =========================
-
-// Popup Service NICHT Singleton (Fix für Event-Leaks + DI Probleme)
 builder.Services.AddScoped<INotificationService, WebNotificationService>();
 builder.Services.AddScoped<AchievementPopupService>();
 
 // =========================
-// CONFIRM DIALOG
+// JS CONFIRM
 // =========================
 builder.Services.AddScoped<Func<string, Task<bool>>>(sp =>
 {
@@ -73,7 +69,7 @@ builder.Services.AddScoped<Func<string, Task<bool>>>(sp =>
 });
 
 // =========================
-// GLOBAL ERROR LOGGING
+// ERROR HANDLING
 // =========================
 AppDomain.CurrentDomain.UnhandledException += (s, e) =>
 {
@@ -81,5 +77,4 @@ AppDomain.CurrentDomain.UnhandledException += (s, e) =>
 };
 
 var app = builder.Build();
-
 await app.RunAsync();
