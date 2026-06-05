@@ -9,10 +9,6 @@ using Trainingsfortschritt.Web.ViewModels;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 
-// =========================
-// BASE PATH FIX (WICHTIG)
-// =========================
-var baseHref = "/Trainingsfortschritt.Web/";
 builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
