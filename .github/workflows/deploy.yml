@@ -20,12 +20,13 @@ jobs:
         run: dotnet restore Trainingsfortschritt.Web.csproj
       - name: Publish
         run: dotnet publish Trainingsfortschritt.Web.csproj -c Release -o publish --nologo -p:StaticWebAssetBasePath=/Trainingsfortschritt.Web
-      - name: Add .nojekyll          # ← NEU
-        run: touch publish/wwwroot/.nojekyll
+      - name: Add .nojekyll
+        run: touch publish/wwwroot/Trainingsfortschritt.Web/.nojekyll
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: publish/wwwroot
+          path: publish/wwwroot/Trainingsfortschritt.Web   # ← angepasst
   deploy:
     needs: build
     runs-on: ubuntu-latest
