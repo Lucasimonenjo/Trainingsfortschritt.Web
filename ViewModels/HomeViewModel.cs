@@ -101,7 +101,7 @@ public class HomeViewModel : IDisposable
                 {
                     new ExerciseGroup("Alle Übungen", items)
                     {
-                        IsExpanded = true
+                        IsExpanded = false
                     }
                 };
             }
@@ -334,7 +334,7 @@ public class HomeViewModel : IDisposable
     }
     public Task OpenGoalHistoryAsync(NavigationManager nav)
     {
-        nav.NavigateTo("/goal-history");
+        nav.NavigateTo("goal-history");
         return Task.CompletedTask;
     }
 }
